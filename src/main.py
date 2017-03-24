@@ -2,19 +2,28 @@
 
 import re
 import numpy as np
-from datetime import time
+from datetime import time, timedelta
 
 stop_regex = re.compile(u"(SQLProxy)|(P2_COD)", flags=re.UNICODE)
 
+
 def process_result(time_type_structure, f_out, last_time_write):
     for key in list(time_type_structure.keys()):
-        pass
-        # проверяем условие записи статистики за секунду
+        in_second_structure = time_type_structure[key]
+        if in_second_structure.get('count_in', 0) == in_second_structure.get('count_in', 0) \
+                and not in_second_structure.get('now_or_past', True) \
+                and time.strftime(key[0], '%h:%m:%s') == (time.strftime(last_time_write, '%h:%m:%s') + \
+                                                                  timedelta(seconds=1)):
+            # это условие нужно переписать нормально (ПРОВЕРИТЬ)
+            result_line = count_stat_by_second(in_second_structure)
+            f_out.write(result_line)
 
-def count_stat_by_second(in_second_structure, f_out):
+
+def count_stat_by_second(in_second_structure):
     res = list()
     # считаем статистику
     return u';'.join([str(x) for x in res])
+
 
 def line_processing(line):
     # функция, которая обрабатывает строку и возвращает словарь с нужными атрибутами
@@ -37,12 +46,10 @@ def line_processing(line):
         q_or_a = u''
         time_full = time.strftime(log_time, '%h:%m:%s.%f')
 
-
     return (time_to_seconds, id, type_of_line, q_or_a, time_full)
 
 
 def __main__(*argv):
-
     if argv and argv[0] > 2:
         path_to_data = argv[1]
 
@@ -107,8 +114,6 @@ def __main__(*argv):
                 temp_structure['now_or_past'] = now_or_past
                 temp_structure[u'count_in'] = count_in
                 temp_structure[u'count_out'] = count_out
-
-
 
                 temp_structure[id] = temp_id_structure
                 time_type_structure[(time_to_seconds, type_of_line)] = temp_structure
