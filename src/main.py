@@ -20,9 +20,11 @@ def line_processing(line):
 
         time_to_seconds = log_time.split(u'.')[0]
         id = line[0]
+        # получение типа сообщения
+        type_of_line = u''
         result['time'] = time.strftime(log_time, '%h:%m:%s.%f')
 
-    return (time_to_seconds, id, result)
+    return (time_to_seconds, id, type_of_line, result)
 
 
 def __main__(*argv):
@@ -38,6 +40,12 @@ def __main__(*argv):
 
         f_out = open(path_to_result, 'w', encoding='utf8')
 
+        # структура для каждого момента времени
+        time_structure = dict()
+
+        # последнее время, за которое записана статистика
+        last_time_write = None
+
         for line in f:
             # для каждого момента времени час-минута-секунда имеем структуру со следующими атрибутами
             #   1 количество запросов
@@ -47,9 +55,15 @@ def __main__(*argv):
             # Если количество запросов == количество ответов и 3 == False -> считаем статистику
             # по этому моменту и пишем ее в файл
 
-            # нужно проверить, что секунда пишутся последовательно
-            
+            # нужно проверить, что секунды пишутся последовательно
+
+            # вопрос? теряются ли запросы? или на каждый запрос приходит ответ обязательно?
+            # если теряются, то как их считать?
+
             line_processed = line_processing(line)
+
+
+
 
         # тут что то происходит
 
