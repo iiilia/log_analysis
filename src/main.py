@@ -69,6 +69,7 @@ def __main__(*argv):
 
         # последнее время, за которое записана статистика
         last_time_write = None
+        last_q_time = None
 
         for line in f:
 
@@ -83,7 +84,8 @@ def __main__(*argv):
             structure = line_processing(line)
             if structure:
                 (time_to_seconds, id, type_of_line, q_or_a, time_full) = structure
-
+                if last_q_time < time_to_seconds and q_or_a == u'q':
+                    last_q_time = time_to_seconds
                 temp_structure = time_type_structure.get((time_to_seconds, type_of_line), dict())
                 temp_id_structure = temp_structure.get(id, dict())
                 temp_id_structure[q_or_a] = time_full
@@ -96,10 +98,13 @@ def __main__(*argv):
                 if q_or_a == u'q':
                     count_in += 1
                     # проверяем что запрос пришел из новой секунды
-                                            
                 elif q_or_a == 'a':
                     count_out += 1
 
+                if last_q_time > time_to_seconds:
+                    now_or_past = False
+
+                temp_structure['now_or_past'] = now_or_past
                 temp_structure[u'count_in'] = count_in
                 temp_structure[u'count_out'] = count_out
 
@@ -108,7 +113,7 @@ def __main__(*argv):
                 temp_structure[id] = temp_id_structure
                 time_type_structure[(time_to_seconds, type_of_line)] = temp_structure
 
-            process_result(time_type_structure, f_out)
+            process_result(time_type_structure, f_out, last_time_write)
 
         f.close()
         f_out.close()
