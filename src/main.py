@@ -22,6 +22,19 @@ def line_processing(line):
 def __main__(*argv):
     if argv and argv[0] > 2:
         path_to_data = argv[1]
-        f = open(path_to_data, 'r') # нам не указана кодировка файла
+
+        # путь к файлу с результатами
+        path_to_result = u''
+
+        # нам не указана кодировка файла
+        f = open(path_to_data, 'r')
+
+        f_out = open(path_to_result, 'w', encoding='utf8')
+
         for line in f:
             line_processed = line_processing(line)
+
+        # тут что то происходит
+
+        f.close()
+        f_out.close()
