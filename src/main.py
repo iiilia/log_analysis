@@ -83,9 +83,28 @@ def __main__(*argv):
             structure = line_processing(line)
             if structure:
                 (time_to_seconds, id, type_of_line, q_or_a, time_full) = structure
+
                 temp_structure = time_type_structure.get((time_to_seconds, type_of_line), dict())
                 temp_id_structure = temp_structure.get(id, dict())
                 temp_id_structure[q_or_a] = time_full
+
+                # обновляем статистику по секунде и по типу
+                count_in = temp_structure.get(u'count_in', 0)
+                count_out = temp_structure.get(u'count_out', 0)
+                now_or_past = temp_structure.get(u'now_or_past', True)
+
+                if q_or_a == u'q':
+                    count_in += 1
+                    # проверяем что запрос пришел из новой секунды
+                                            
+                elif q_or_a == 'a':
+                    count_out += 1
+
+                temp_structure[u'count_in'] = count_in
+                temp_structure[u'count_out'] = count_out
+
+
+
                 temp_structure[id] = temp_id_structure
                 time_type_structure[(time_to_seconds, type_of_line)] = temp_structure
 
