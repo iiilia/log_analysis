@@ -1,19 +1,31 @@
 # coding: utf-8
 
 import re
+import numpy as np
 from datetime import time
 
 stop_regex = re.compile(u"(SQLProxy)|(P2_COD)", flags=re.UNICODE)
 
+def process_result(time_type_structure, f_out, last_time_write):
+    for key in list(time_type_structure.keys()):
+        pass
+        # проверяем условие записи статистики за секунду
+
+def count_stat_by_second(in_second_structure, f_out):
+    res = list()
+    # считаем статистику
+    return u';'.join([str(x) for x in res])
+
 def line_processing(line):
     # функция, которая обрабатывает строку и возвращает словарь с нужными атрибутами
+
+    # q_or_a - запрос или ответ
 
     global stop_regex
 
     result = None
 
     if len(stop_regex.findall(line)) > 0:
-        result = dict()
         line_temp = line.split(u'|')
         log_time = line_temp[0]
         line = u'|'.join(line_temp[1:]).split(u';')
@@ -22,9 +34,11 @@ def line_processing(line):
         id = line[0]
         # получение типа сообщения
         type_of_line = u''
-        result['time'] = time.strftime(log_time, '%h:%m:%s.%f')
+        q_or_a = u''
+        time_full = time.strftime(log_time, '%h:%m:%s.%f')
 
-    return (time_to_seconds, id, type_of_line, result)
+
+    return (time_to_seconds, id, type_of_line, q_or_a, time_full)
 
 
 def __main__(*argv):
@@ -40,19 +54,25 @@ def __main__(*argv):
 
         f_out = open(path_to_result, 'w', encoding='utf8')
 
-        # структура для каждого момента времени
-        time_structure = dict()
+        # структура для каждого момента времени и каждого типа
+        # {(время, тип):{
+        #       id: {
+        #           q: время запроса
+        #           a: время ответа
+        #           },
+        #       count_in: int       количество запросов
+        #       count_out: int      количество ответов
+        #       now_or_past: bool   из этого ли момента времени приходят сейчас запросы? или мы можем получить еще новых
+        #   }
+        # }
+        time_type_structure = dict()
 
         # последнее время, за которое записана статистика
         last_time_write = None
 
         for line in f:
-            # для каждого момента времени час-минута-секунда имеем структуру со следующими атрибутами
-            #   1 количество запросов
-            #   2 количество ответов
-            #   3 из этого ли момента времени приходят сейчас запросы? или мы можем получить еще новых
 
-            # Если количество запросов == количество ответов и 3 == False -> считаем статистику
+            # Если count_in == count_out и now_or_past == False -> считаем статистику
             # по этому моменту и пишем ее в файл
 
             # нужно проверить, что секунды пишутся последовательно
@@ -60,12 +80,16 @@ def __main__(*argv):
             # вопрос? теряются ли запросы? или на каждый запрос приходит ответ обязательно?
             # если теряются, то как их считать?
 
-            line_processed = line_processing(line)
+            structure = line_processing(line)
+            if structure:
+                (time_to_seconds, id, type_of_line, q_or_a, time_full) = structure
+                temp_structure = time_type_structure.get((time_to_seconds, type_of_line), dict())
+                temp_id_structure = temp_structure.get(id, dict())
+                temp_id_structure[q_or_a] = time_full
+                temp_structure[id] = temp_id_structure
+                time_type_structure[(time_to_seconds, type_of_line)] = temp_structure
 
-
-
-
-        # тут что то происходит
+            process_result(time_type_structure, f_out)
 
         f.close()
         f_out.close()
